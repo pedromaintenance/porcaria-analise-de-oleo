@@ -1,7 +1,7 @@
 /* P.O.R.C.A.R.I.A. — Análise de Óleo v2.0 | PWA offline sem dependências externas */
 (()=>{'use strict';
 const D=window.PORCARIA_CASES||[], CH=window.PORCARIA_CHAPTERS||[], MAN=window.PORCARIA_MANUALS||[], TOOLS=window.PORCARIA_TOOLS||[], PARTS=window.PORCARIA_PARTS||[];
-const KEY='porcaria.analise.oleo.v2',VERSION='2.0.0';
+const KEY='porcaria.analise.oleo.v2',VERSION='2.0.1';
 const $=s=>document.querySelector(s), esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const money=x=>`${Math.round(x||0).toLocaleString('pt-BR')} Cr$`;
 const safeCase=id=>D.find(x=>x.id===id), manual=id=>MAN.find(x=>x.id===id),tool=id=>TOOLS.find(x=>x.id===id),part=id=>PARTS.find(x=>x.id===id);
@@ -123,8 +123,8 @@ function profile(){const earned=state.earned,lost=state.lost,entries=state.ledge
 return `<div class="pagehead"><div class="kicker">FICHA DO PROFISSIONAL</div><h1>${rank}</h1><p>Seu progresso está salvo apenas neste dispositivo, neste navegador.</p></div><div class="stats two"><div><b>${recCount()}</b><span>Missões concluídas</span></div><div><b>${state.partsSaved}</b><span>Conjuntos preservados</span></div><div><b>${money(earned)}</b><span>Créditos recebidos</span></div><div><b>${money(lost)}</b><span>Créditos gastos/perdidos</span></div><div><b>${state.premature}</b><span>Trocas prematuras</span></div><div><b>${Object.values(state.records).reduce((a,r)=>a+(r.attempts||0),0)}</b><span>Tentativas registradas</span></div></div>
  <h2 class="section-title">Conquistas</h2><div class="badges">${badges.map(([title,yes])=>`<span class="medal ${yes?'earned':''}">${yes?'✦':'◇'} ${title}</span>`).join('')}</div><h2 class="section-title">Livro-caixa</h2><div class="ledger">${entries.map(x=>`<div><span>${esc(x.desc)}</span><strong class="${x.amount>=0?'gain':'loss'}">${x.amount>=0?'+':''}${money(x.amount)}</strong></div>`).join('')}</div><button class="outline block" data-action="export">Exportar carreira em JSON</button>`;}
 function settings(){return `<div class="pagehead"><div class="kicker">CONTROLES DO JOGO</div><h1>Configurações</h1><p>Importação, exportação e controle do ambiente instrutivo.</p></div><div class="settings-card"><h2>Backup de progresso</h2><p>Exporte regularmente o save para não perder carteira, manuais, ferramentas, estoque e resultados.</p><div class="buttonrow"><button class="primary" data-action="export">Exportar save JSON</button><button class="outline" data-action="import">Importar JSON</button></div></div><div class="settings-card"><h2>Modo Instrutor ${state.instructor?'· ATIVO':''}</h2><p>Libera imediatamente todos os <b>${D.length} casos</b> e todos os <b>${MAN.length} manuais</b>. A ativação sempre <b>zera saldo, inventário, resultados, conquistas e progresso</b> para iniciar uma sessão didática limpa.</p><button class="${state.instructor?'outline':'primary'} block" data-action="instructor-prompt">${state.instructor?'Desativar Modo Instrutor (reiniciar)':'Ativar Modo Instrutor (reiniciar)'}</button></div><div class="settings-card"><h2>Recomeçar carreira</h2><p>Apaga o progresso local. Exporte antes de continuar.</p><button class="dangerbtn" data-action="reset-prompt">Zerar carreira</button></div><div class="settings-card"><h2>Instalação offline</h2><p>Para instalar, publique em HTTPS (por exemplo, GitHub Pages), abra no navegador e escolha “Adicionar à tela inicial” ou “Instalar aplicativo”. O jogo e os manuais funcionarão offline após a primeira visita completa.</p><button class="outline" data-action="install">Instalar PWA</button></div><div class="note compact"><b>Privacidade</b><p>Sem analytics, login, API remota ou envio de dados. Os créditos não são moeda real. A biblioteca usa textos originais de treinamento. O aplicativo não permite executar procedimentos reais.</p></div>`;}
-function modalHtml(){if(!modal)return '';if(modal==='instructor')return `<div class="overlay"><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="dialog-sign">⚠</div><h2 id="modal-title">${state.instructor?'Desativar':'Ativar'} Modo Instrutor?</h2><p>Essa mudança <b>apagará o jogo atual e iniciará tudo do zero</b>: créditos, loja, missões e estatísticas. A única forma de recuperar o progresso antigo será importar um backup JSON salvo antes desta operação.</p><button class="primary block" data-action="export">↓ Exportar meu save JSON</button><label class="ack"><input type="checkbox" id="discard-ok" ${confirmDiscard?'checked':''} data-action="ack"/> Entendo que o progresso será apagado ${exported?'(backup solicitado)':'(mesmo sem backup)'}</label><div class="buttonrow"><button class="outline" data-action="close-modal">Cancelar</button><button class="dangerbtn" data-action="instructor-apply" ${!confirmDiscard?'disabled':''}>Zerar e ${state.instructor?'desativar':'ativar'}</button></div></div></div>`;
- if(modal==='reset')return `<div class="overlay"><div class="dialog" role="dialog" aria-modal="true"><h2>Apagar progresso?</h2><p>O jogo começará sem manuais comprados, carteira, inventário ou missões concluídas. Exporte seu save antes do reset.</p><button class="outline block" data-action="export">Exportar JSON</button><label class="ack"><input type="checkbox" id="discard-ok" ${confirmDiscard?'checked':''} data-action="ack"/> Confirmo que desejo recomeçar</label><div class="buttonrow"><button class="outline" data-action="close-modal">Cancelar</button><button class="dangerbtn" data-action="reset-apply" ${!confirmDiscard?'disabled':''}>Apagar e reiniciar</button></div></div></div>`;
+function modalHtml(){if(!modal)return '';if(modal==='instructor')return `<div class="overlay"><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="dialog-sign">⚠</div><h2 id="modal-title">${state.instructor?'Desativar':'Ativar'} Modo Instrutor?</h2><p>Essa mudança <b>apagará o jogo atual e iniciará tudo do zero</b>: créditos, loja, missões e estatísticas. A única forma de recuperar o progresso antigo será importar um backup JSON salvo antes desta operação.</p><button class="primary block" data-action="export">↓ Exportar meu save JSON</button><label class="ack"><input type="checkbox" id="discard-ok" ${confirmDiscard?'checked':''}/> Entendo que o progresso será apagado ${exported?'(backup solicitado)':'(mesmo sem backup)'}</label><div class="buttonrow"><button class="outline" data-action="close-modal">Cancelar</button><button class="dangerbtn" data-action="instructor-apply" ${!confirmDiscard?'disabled':''}>Zerar e ${state.instructor?'desativar':'ativar'}</button></div></div></div>`;
+ if(modal==='reset')return `<div class="overlay"><div class="dialog" role="dialog" aria-modal="true"><h2>Apagar progresso?</h2><p>O jogo começará sem manuais comprados, carteira, inventário ou missões concluídas. Exporte seu save antes do reset.</p><button class="outline block" data-action="export">Exportar JSON</button><label class="ack"><input type="checkbox" id="discard-ok" ${confirmDiscard?'checked':''}/> Confirmo que desejo recomeçar</label><div class="buttonrow"><button class="outline" data-action="close-modal">Cancelar</button><button class="dangerbtn" data-action="reset-apply" ${!confirmDiscard?'disabled':''}>Apagar e reiniciar</button></div></div></div>`;
  return '';}
 function render(){let section=page==='home'?home():page==='missions'?missions():page==='game'?game():page==='shop'?store():page==='library'?library():page==='profile'?profile():settings();$('#app').innerHTML=header()+`<main>${section}</main>`+footer()+modalHtml();}
 function downloadSave(){const blob=new Blob([JSON.stringify({...state,exportedAt:new Date().toISOString()},null,2)],{type:'application/json'});const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`PORCARIA_Analise_de_Oleo_save_${new Date().toISOString().slice(0,10)}.json`;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),600);exported=true;notice('Backup JSON solicitado. Confira a pasta de downloads.');if(modal)render();}
@@ -135,7 +135,25 @@ function doTest(type){let s=state.session,m=chooseSession();if(!m||!s||s.stage!=
  s.tests.push(type);s.spent+=cost;if(cost)commit('Teste da missão '+m.id+' — '+type,-cost);else save();render();}
 function next(stage){let s=state.session;if(!s)return;if(stage==='act'&&!s.hyp)return;if(stage==='diagnose'||stage==='investigate'||stage==='act'){s.stage=stage;save();render();}}
 function modalOpen(kind){modal=kind;confirmDiscard=false;exported=false;render();}
-function handleClick(ev){const b=ev.target.closest('[data-action]');if(!b)return;const a=b.dataset.action;switch(a){
+// Mesmo fluxo de confirmação do Códigos de Falha: exportar, confirmar e trocar de modo.
+// Alterar o modo só reinicia os dados após a confirmação explícita; não muda a chave do save.
+function changeInstructorMode(){
+ if(modal!=='instructor'||!confirmDiscard)return;
+ const enabled=!state.instructor;
+ state=newSave(enabled);
+ save();
+ page='home';filter='all';term='';selectedManual=null;
+ modal=null;confirmDiscard=false;exported=false;
+ render();
+ notice(enabled?'Modo Instrutor ativado: missões e manuais liberados.':'Modo Instrutor desativado: nova carreira iniciada.');
+}
+function updateDiscardAcknowledgement(checked){
+ confirmDiscard=!!checked;
+ // Não recriar o modal ao marcar a caixa: preserva o estado do input no Chrome Android.
+ const apply=$('[data-action="instructor-apply"]')||$('[data-action="reset-apply"]');
+ if(apply)apply.disabled=!confirmDiscard;
+}
+function handleClick(ev){const b=ev.target.closest('[data-action]');if(!b||b.disabled)return;const a=b.dataset.action;switch(a){
  case 'nav':nav(b.dataset.page);break;
  case 'chapter':filter=b.dataset.chapter;term='';nav('missions');break;
  case 'start':{let m=safeCase(b.dataset.id);if(m)start(m);break;}
@@ -153,14 +171,14 @@ function handleClick(ev){const b=ev.target.closest('[data-action]');if(!b)return
  case 'import':$('#import-file').click();break;
  case 'instructor-prompt':modalOpen('instructor');break;
  case 'reset-prompt':modalOpen('reset');break;
- case 'close-modal':modal=null;render();break;
- case 'instructor-apply':if(confirmDiscard){state=newSave(!state.instructor);save();page='home';modal=null;selectedManual=null;render();notice('Modo alterado. Nova carreira iniciada do zero.');}break;
+ case 'close-modal':modal=null;confirmDiscard=false;exported=false;render();break;
+ case 'instructor-apply':changeInstructorMode();break;
  case 'reset-apply':if(confirmDiscard){state=newSave(false);save();page='home';modal=null;selectedManual=null;render();notice('Carreira reiniciada.');}break;
  case 'install':if(installEvt){installEvt.prompt();installEvt.userChoice.then(()=>installEvt=null);}else notice('Abra em HTTPS e use a opção de instalar do navegador.');break;
  }}
 const input=$('#import-file');input.addEventListener('change',async ev=>{const f=ev.target.files?.[0];if(!f)return;try{if(f.size>2000000)throw Error('Arquivo JSON grande demais.');const raw=JSON.parse(await f.text());state=cleanImported(raw);save();page='home';modal=null;selectedManual=null;render();notice('Save importado.');}catch(e){notice('Falha na importação: '+e.message);}finally{ev.target.value='';}});
-$('#app').addEventListener('click',handleClick);$('#app').addEventListener('input',e=>{if(e.target.id==='search'){term=e.target.value;const pos=e.target.selectionStart;render();let n=$('#search');n.focus();n.setSelectionRange(pos,pos);}});
-$('#app').addEventListener('change',e=>{if(e.target.id==='mission-filter'){filter=e.target.value;render();}if(e.target.id==='discard-ok'){confirmDiscard=e.target.checked;render();}});
+$('#app').addEventListener('click',handleClick);$('#app').addEventListener('input',e=>{if(e.target.id==='discard-ok'){updateDiscardAcknowledgement(e.target.checked);return;}if(e.target.id==='search'){term=e.target.value;const pos=e.target.selectionStart;render();let n=$('#search');n.focus();n.setSelectionRange(pos,pos);}});
+$('#app').addEventListener('change',e=>{if(e.target.id==='mission-filter'){filter=e.target.value;render();}if(e.target.id==='discard-ok'){updateDiscardAcknowledgement(e.target.checked);}});
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;});
 if('serviceWorker'in navigator&&location.protocol==='https:'){navigator.serviceWorker.register('./service-worker.js').catch(()=>{});}
 render();
