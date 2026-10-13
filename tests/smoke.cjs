@@ -8,6 +8,7 @@ const TEST=ctx.window.PORCARIA_TEST,CASES=Array.from(TEST.cases),state=()=>TEST.
 assert.equal(CASES.length,72);assert.equal(ctx.window.PORCARIA_MANUALS.length>=15,true);
 assert.equal(CASES.filter(c=>c.outcome==='replace').length,7);
 assert.equal(nodes['#app'].innerHTML.includes('Campanhas de diagnóstico'),true);
+assert.ok(nodes['#app'].innerHTML.includes('data-action="install"'),'Instalação manual precisa estar disponível na tela inicial');
 assert.equal(Object.values(state().records).length,0);
 // Every mission can start in instructor, calculate safe and unsafe outcomes; no corporate raw IDs.
 TEST.reset(true);
@@ -34,7 +35,10 @@ send('triage',{choice:'secure'});assert.equal(state().session.stage,'investigate
 let oldWallet=state().wallet;send('test',{test:'visual'});assert.equal(state().wallet,oldWallet-25);
 send('next',{next:'diagnose'});send('hyp',{choice:'correct'});send('next',{next:'act'});send('act',{choice:'correct'});send('finish');assert.equal(state().session.stage,'result');assert.ok(state().records[CASES[0].id].attempts===1);assert.ok(state().wallet>0);
 // instructor flow always requires explicit checkbox, and clears all prior records
-send('nav',{page:'settings'});send('instructor-prompt');assert.ok(nodes['#app'].innerHTML.includes('Exportar meu save JSON'));send('instructor-apply');assert.ok(!state().instructor);
+send('nav',{page:'profile'});
+assert.ok(nodes['#app'].innerHTML.includes('data-action="instructor-prompt"'),'Modo Instrutor deve estar visível na tela Carreira');
+assert.ok(nodes['#app'].innerHTML.includes('data-page="settings"'),'Configurações devem estar acessíveis pela tela Carreira');
+send('instructor-prompt');assert.ok(nodes['#app'].innerHTML.includes('Exportar meu save JSON'));send('instructor-apply');assert.ok(!state().instructor);
 nodes['#app'].listeners.change({target:{id:'discard-ok',checked:true}});send('instructor-apply');assert.equal(state().instructor,true);assert.equal(Object.keys(state().records).length,0);assert.equal(state().wallet,1200);
 assert.ok(!fs.readFileSync(path.join(ROOT,'index.html'),'utf8').match(/https?:\/\//));
 const sw=fs.readFileSync(path.join(ROOT,'service-worker.js'),'utf8');for(const x of ['./index.html','./js/cases.js','./js/library.js','./js/app.js','./css/style.css'])assert.ok(sw.includes(x));
