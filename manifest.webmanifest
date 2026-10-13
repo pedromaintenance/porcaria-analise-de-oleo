@@ -1,1 +1,27 @@
-{"name":"P.O.R.C.A.R.I.A. — Análise de Óleo","short_name":"Análise de Óleo","description":"Simulador didático offline de análise de fluidos, manutenção e economia da confiabilidade.","id":"./","start_url":"./index.html","scope":"./","display":"standalone","orientation":"portrait-primary","lang":"pt-BR","background_color":"#091a25","theme_color":"#091a25","icons":[{"src":"./icons/icon-192.png","sizes":"192x192","type":"image/png","purpose":"any maskable"},{"src":"./icons/icon-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}]}
+{
+  "name": "P.O.R.C.A.R.I.A. — Análise de Óleo",
+  "short_name": "Análise de Óleo",
+  "description": "Simulador didático offline de análise de fluidos, manutenção e economia da confiabilidade.",
+  "id": "/porcaria-analise-de-oleo/",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "lang": "pt-BR",
+  "background_color": "#091a25",
+  "theme_color": "#091a25",
+  "icons": [
+    {
+      "src": "./icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
