@@ -1,4 +1,72 @@
-const CACHE='porcaria-analise-oleo-v2.0.2';const FILES=['./','./index.html','./manifest.webmanifest','./css/style.css','./js/cases.js','./js/library.js','./js/app.js','./icons/icon-192.png','./icons/icon-512.png'];
-self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(FILES)).then(()=>self.skipWaiting()));});
-self.addEventListener('activate',e=>{e.waitUntil(Promise.all([caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('porcaria-analise-oleo-')&&k!==CACHE).map(k=>caches.delete(k)))),self.clients.claim()]));});
-self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;const u=new URL(e.request.url);if(u.origin!==self.location.origin)return;e.respondWith(caches.match(e.request).then(hit=>hit||fetch(e.request).then(r=>{if(r.ok){const cl=r.clone();caches.open(CACHE).then(c=>c.put(e.request,cl));}return r;}).catch(()=>e.request.mode==='navigate'?caches.match('./index.html'):Response.error())));});
+/* PWA offline-first — isolamento por projeto e atualização de manifesto. */
+'use strict';
+const CACHE = "porcaria-analise-oleo-v2.0.3";
+const PREFIX = "porcaria-analise-oleo-";
+const FILES = [
+  "./",
+  "./index.html",
+  "./manifest.webmanifest",
+  "./css/style.css",
+  "./js/cases.js",
+  "./js/library.js",
+  "./js/app.js",
+  "./icons/icon-192.png",
+  "./icons/icon-512.png"
+];
+const SCOPE = new URL(self.registration.scope);
+const MANIFEST_URL = new URL('./manifest.webmanifest', SCOPE);
+const INDEX_URL = new URL('./index.html', SCOPE);
+
+self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open(CACHE)
+      .then(cache => cache.addAll(FILES))
+      .then(() => self.skipWaiting())
+  );
+});
+
+self.addEventListener('activate', event => {
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(keys.filter(key => key.startsWith(PREFIX) && key !== CACHE).map(key => caches.delete(key)));
+    await self.clients.claim();
+  })());
+});
+
+self.addEventListener('fetch', event => {
+  const request = event.request;
+  if (request.method !== 'GET') return;
+  const url = new URL(request.url);
+  if (url.origin !== SCOPE.origin || !url.pathname.startsWith(SCOPE.pathname)) return;
+
+  if (url.pathname === MANIFEST_URL.pathname) {
+    // Manifestos versionados no HTML devem ser obtidos online; offline usa a cópia local.
+    event.respondWith((async () => {
+      const cache = await caches.open(CACHE);
+      try {
+        const fresh = await fetch(request, { cache: 'no-store' });
+        if (fresh.ok) {
+          await cache.put(MANIFEST_URL, fresh.clone());
+          return fresh;
+        }
+      } catch (_) {}
+      return (await cache.match(MANIFEST_URL)) || Response.error();
+    })());
+    return;
+  }
+
+  event.respondWith((async () => {
+    const cache = await caches.open(CACHE);
+    const saved = await cache.match(request);
+    if (saved) return saved;
+    try {
+      const response = await fetch(request);
+      if (response.ok && response.type === 'basic') {
+        await cache.put(request, response.clone());
+      }
+      return response;
+    } catch (_) {
+      return (request.mode === 'navigate' ? await cache.match(INDEX_URL) : null) || Response.error();
+    }
+  })());
+});
