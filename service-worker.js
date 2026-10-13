@@ -1,6 +1,6 @@
 /* PWA offline-first — isolamento por projeto e atualização de manifesto. */
 'use strict';
-const CACHE = "porcaria-analise-oleo-v2.0.4";
+const CACHE = "porcaria-analise-oleo-v2.0.5";
 const PREFIX = "porcaria-analise-oleo-";
 const FILES = [
   "./",
