@@ -8,6 +8,7 @@ const TEST=ctx.window.PORCARIA_TEST,CASES=Array.from(TEST.cases),state=()=>TEST.
 assert.equal(CASES.length,72);assert.equal(ctx.window.PORCARIA_MANUALS.length>=15,true);
 assert.equal(CASES.filter(c=>c.outcome==='replace').length,7);
 assert.equal(nodes['#app'].innerHTML.includes('Campanhas de diagnóstico'),true);
+assert.ok(nodes['#app'].innerHTML.includes('data-action="install"'),'Instalação manual precisa estar disponível na tela inicial');
 assert.equal(Object.values(state().records).length,0);
 // Every mission can start in instructor, calculate safe and unsafe outcomes; no corporate raw IDs.
 TEST.reset(true);
