@@ -34,7 +34,7 @@ function nav(id){page=id;if(id!=='library')selectedManual=null;modal=null;render
 const tag=(s,cl='')=>`<span class="tag ${cl}">${esc(s)}</span>`;
 function header(){return `<header class="top"><div class="logo" data-action="nav" data-page="home"><span class="brand-icon">⚙</span><div><strong>P.O.R.C.A.R.I.A.</strong><small>ANÁLISE DE ÓLEO · v${VERSION}</small></div></div><div class="topwallet" data-action="nav" data-page="shop"><span>CARTEIRA</span><b>${money(state.wallet)}</b></div></header>`;}
 function footer(){return `<nav class="bottom" aria-label="Navegação">${[['home','⌂','Início'],['missions','◈','Missões'],['shop','▣','Loja'],['library','▤','Manuais'],['profile','◎','Carreira']].map(([id,ico,name])=>`<button class="navbtn ${page===id||(page==='game'&&id==='missions')?'active':''}" data-action="nav" data-page="${id}"><span>${ico}</span><small>${name}</small></button>`).join('')}</nav>`;}
-function home(){const done=recCount(),available=D.filter(isUnlocked).length;return `<section class="hero"><div class="kicker">LABORATÓRIO • OFICINA • DECISÃO</div><h1>O próximo diagnóstico pode salvar um componente.</h1><p>Investigue fluidos, selecione testes, compare hipóteses e responda pelo custo das suas escolhas. Todos os números econômicos são fictícios.</p><div class="hero-actions"><button class="primary" data-action="${state.session&&state.session.stage!=='result'?'resume':'nav'}" data-page="missions">${state.session&&state.session.stage!=='result'?'Continuar investigação →':'Investigar agora →'}</button><button class="outline" data-action="nav" data-page="library">Estudar manuais</button></div></section>
+function home(){const done=recCount(),available=D.filter(isUnlocked).length;return `<section class="hero"><div class="kicker">LABORATÓRIO • OFICINA • DECISÃO</div><h1>O próximo diagnóstico pode salvar um componente.</h1><p>Investigue fluidos, selecione testes, compare hipóteses e responda pelo custo das suas escolhas. Todos os números econômicos são fictícios.</p><div class="hero-actions"><button class="primary" data-action="${state.session&&state.session.stage!=='result'?'resume':'nav'}" data-page="missions">${state.session&&state.session.stage!=='result'?'Continuar investigação →':'Investigar agora →'}</button><button class="outline" data-action="nav" data-page="library">Estudar manuais</button><button class="outline" data-action="install">↓ Instalar aplicativo</button></div></section>
  <section class="stats three"><div><b>${done}<small> / ${D.length}</small></b><span>Casos resolvidos</span></div><div><b>${state.partsSaved}</b><span>Componentes preservados</span></div><div><b>${state.streak}</b><span>Sequência atual</span></div></section>
  ${state.instructor?`<div class="instructor-notice">◉ Modo Instrutor ativo — missão e manual liberados. Progresso desta modalidade é separado por reset.</div>`:''}
  <h2 class="section-title">Campanhas de diagnóstico</h2><div class="chaptergrid">${CH.map((c,i)=>{let arr=D.filter(m=>m.chapter===i),pass=arr.filter(m=>state.records[m.id]?.attempts>0).length,locked=!state.instructor&&i>0&&done<i*5;return `<button class="chapter" data-action="chapter" data-chapter="${i}"><div class="chapter-number">CAMINHO ${String(i+1).padStart(2,'0')} ${locked?' · BLOQUEADO':''}</div><div class="chapter-icon">${c.icon}</div><strong>${esc(c.name)}</strong><small>${esc(c.subtitle)}</small><div class="chapterprogress"><span style="width:${Math.round(pass/arr.length*100)}%"></span></div><div class="chapter-bottom">${pass}/${arr.length} missões ${locked?'· requer '+(i*5)+' resolvidas':'· disponível'}</div></button>`;}).join('')}</div>
@@ -141,6 +141,18 @@ function doTest(type){let s=state.session,m=chooseSession();if(!m||!s||s.stage!=
  s.tests.push(type);s.spent+=cost;if(cost)commit('Teste da missão '+m.id+' — '+type,-cost);else save();render();}
 function next(stage){let s=state.session;if(!s)return;if(stage==='act'&&!s.hyp)return;if(stage==='diagnose'||stage==='investigate'||stage==='act'){s.stage=stage;save();render();}}
 function modalOpen(kind){modal=kind;confirmDiscard=false;exported=false;render();}
+function requestAppInstallation(){
+ if(window.matchMedia?.('(display-mode: standalone)').matches){notice('Este aplicativo já está aberto no modo instalado.');return;}
+ if(installEvt){
+  const pending=installEvt;
+  installEvt=null;
+  pending.prompt(); // chamada imediata durante o clique, exigida pelo Chrome
+  pending.userChoice?.then(choice=>notice(choice.outcome==='accepted'?'Instalação solicitada ao Android.':'Instalação cancelada.')).catch(()=>notice('Não foi possível concluir a instalação.'));
+  return;
+ }
+ // Se o Chrome não disponibilizou o evento nesta página, oferece o fluxo já testado.
+ window.location.href='./pwa-diagnostico.html';
+}
 // Mesmo fluxo de confirmação do Códigos de Falha: exportar, confirmar e trocar de modo.
 // Alterar o modo só reinicia os dados após a confirmação explícita; não muda a chave do save.
 function changeInstructorMode(){
@@ -180,12 +192,13 @@ function handleClick(ev){const b=ev.target.closest('[data-action]');if(!b||b.dis
  case 'close-modal':modal=null;confirmDiscard=false;exported=false;render();break;
  case 'instructor-apply':changeInstructorMode();break;
  case 'reset-apply':if(confirmDiscard){state=newSave(false);save();page='home';modal=null;selectedManual=null;render();notice('Carreira reiniciada.');}break;
- case 'install':if(installEvt){installEvt.prompt();installEvt.userChoice.then(()=>installEvt=null);}else notice('Abra em HTTPS e use a opção de instalar do navegador.');break;
+ case 'install':requestAppInstallation();break;
  }}
 const input=$('#import-file');input.addEventListener('change',async ev=>{const f=ev.target.files?.[0];if(!f)return;try{if(f.size>2000000)throw Error('Arquivo JSON grande demais.');const raw=JSON.parse(await f.text());state=cleanImported(raw);save();page='home';modal=null;selectedManual=null;render();notice('Save importado.');}catch(e){notice('Falha na importação: '+e.message);}finally{ev.target.value='';}});
 $('#app').addEventListener('click',handleClick);$('#app').addEventListener('input',e=>{if(e.target.id==='discard-ok'){updateDiscardAcknowledgement(e.target.checked);return;}if(e.target.id==='search'){term=e.target.value;const pos=e.target.selectionStart;render();let n=$('#search');n.focus();n.setSelectionRange(pos,pos);}});
 $('#app').addEventListener('change',e=>{if(e.target.id==='mission-filter'){filter=e.target.value;render();}if(e.target.id==='discard-ok'){updateDiscardAcknowledgement(e.target.checked);}});
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;});
+window.addEventListener('appinstalled',()=>{installEvt=null;notice('Aplicativo instalado com sucesso.');});
 if('serviceWorker'in navigator&&location.protocol==='https:'){navigator.serviceWorker.register('./service-worker.js').catch(()=>{});}
 render();
 window.PORCARIA_TEST={getState:()=>JSON.parse(JSON.stringify(state)),cases:D,compute,reset:(instr=false)=>{state=newSave(instr);save();page='home';render();},start:(id)=>start(safeCase(id)),test:doTest,finish};
